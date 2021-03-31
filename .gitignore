@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# pytorch models
+.pth
+.tar
+.gz
+.ckpt
