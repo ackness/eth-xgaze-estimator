@@ -44,6 +44,9 @@ class TrainConfig(BaseConfig):
         parser.add_argument('--resume', action='store_true', help='whether resume checkpoint')
         parser.add_argument('-pre_path', '--pre_trained_model_path', type=str, default='',
                             help='if resume, use this path to checkpoint')
+        parser.add_argument('--tqdm_freq', type=int, default=10, help='tqdm update frequency')
+        parser.add_argument('--log_freq', type=int, default=1000, help='log frequency')
+        parser.add_argument('--log_path', type=str, default='logs/', help='path to logs')
 
         ########### Cross Datasets Extra Settings (only valid if data_type==cross) ###########
         parser.add_argument('--xgaze_data_dir', type=str, default='',

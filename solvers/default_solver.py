@@ -3,7 +3,7 @@ import importlib
 import numpy as np
 import torch
 import tqdm
-
+import os
 from datasets import get_dataloader
 from models import get_model
 from utils.lookahead import Lookahead
@@ -15,7 +15,7 @@ class Solver:
         self.config = config
         self.mode = self.config.mode
         self.model = get_model(self.config)
-
+        self.model_name = self.config.model_name
         self.use_gpu = torch.cuda.is_available()
         self.use_val = self.config.use_val
         self.lr = self.config.learning_rate
@@ -46,8 +46,22 @@ class Solver:
         self.optimizer = optimizer_cls(self.model.parameters(), lr=self.lr)
         self.scheduler = Lookahead(self.optimizer, k=5, alpha=0.5)
 
+        self.best_ae = 100.0
+        self.best_loss = 100.0
+
     def load_checkpoint(self):
         pass
+
+    def save_checkpoint(self, state, add=None):
+        """
+        Save a copy of the model
+        """
+        if add is not None:
+            filename = add + '_ckpt.pth.tar'
+        else:
+            filename = 'ckpt.pth.tar'
+        ckpt_path = os.path.join(self.checkpoint_path, filename)
+        torch.save(state, ckpt_path)
 
     @staticmethod
     def send_dict_to_gpu(d):
@@ -61,12 +75,12 @@ class Solver:
         elif self.mode == 'test':
             self.test()
 
-    def train_one_epoch(self, epoch):
+    def train_one_epoch(self):
         train_errors = AverageMeter()
         train_losses = AverageMeter()
         train_iter = tqdm.tqdm(self.train_loader, desc='Train Epoch', ncols=10, total=self.n_batch_train, leave=False)
         self.model.train()
-        for batch in train_iter:
+        for i, batch in enumerate(train_iter):
             if self.use_gpu:
                 batch = self.send_dict_to_gpu(batch)
             image = batch['image']
@@ -86,18 +100,24 @@ class Solver:
             self.optimizer.step()
             train_losses.update(loss_gaze.item(), num)
 
-            postfix = {
-                'Error': train_errors.avg,
-                'Loss': train_losses.avg
-            }
-            train_iter.postfix(postfix)
+            if i % self.config.log_freq == 0:
+                postfix = {
+                    'Error': train_errors.avg,
+                    'Loss': train_losses.avg
+                }
+                train_iter.postfix(postfix)
+                train_errors.reset()
+                train_losses.reset()
+
+            if i % self.config.log_freq == 0 and i != 0:
+                pass
 
         if self.use_val:
             self.model.eval()
             val_errors = AverageMeter()
             val_losses = AverageMeter()
             val_iter = tqdm.tqdm(self.val_loader, desc='Val', ncols=10, total=self.n_batch_val, leave=False)
-            for batch in val_iter:
+            for i, batch in enumerate(val_iter):
                 if self.use_gpu:
                     batch = self.send_dict_to_gpu(batch)
                 image = batch['image']
@@ -113,16 +133,44 @@ class Solver:
                 loss_gaze = self.criterion(out, gaze)
                 val_losses.update(loss_gaze.item(), num)
 
-                postfix = {
-                    'Error': val_errors.avg,
-                    'Loss': val_losses.avg
-                }
-                val_iter.postfix(postfix)
+                if i % self.config.log_freq == 0:
+                    postfix = {
+                        'Error': val_errors.avg,
+                        'Loss': val_losses.avg
+                    }
+                    val_iter.postfix(postfix)
+        return train_errors.avg, train_losses.avg
 
     def train(self):
         epoch_iter = tqdm.tqdm(range(self.start_epoch, self.epochs), desc='Train')
         for epoch in epoch_iter:
-            pass
+            train_errors_avg, train_losses_avg = self.train_one_epoch()
+            self.scheduler.step()
+
+            if train_errors_avg < self.best_ae:
+                self.best_ae = train_errors_avg
+            if train_losses_avg < self.best_loss:
+                self.best_loss = train_losses_avg
+
+            postfix = {
+                'Best-mAE': self.best_ae,
+                'Best-LOSS': self.best_loss,
+            }
+            epoch_iter.set_postfix(postfix)
+
+            add_file_name = os.path.join(
+                self.checkpoint_path,
+                self.config.prefix + '_' + self.model_name,
+                f'Epoch_{epoch}'
+            )
+            self.save_checkpoint(
+                {
+                    'epoch': epoch + 1,
+                    'model_state': self.model.state_dict(),
+                    'optim_state': self.optimizer.state_dict(),
+                    'scheule_state': self.scheduler.state_dict(),
+                 }, add=add_file_name
+            )
 
     def test(self):
         pass
