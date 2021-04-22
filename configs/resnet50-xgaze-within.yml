@@ -1,0 +1,39 @@
+mode: train
+
+########### Basic Settings ###########
+prefix: ""
+model_name: "timm_resnet50"
+timm_pretrained: True
+data_dir: ""
+data_type: "with-in"
+checkpoint_path: "ckpts/"
+resume: False
+pre_trained_model_path: ""
+
+## wandb_settings
+wandb: True
+wandb_entity: ""
+log_freq: 10
+
+
+########### Training Settings ###########
+solver: "default_solver"
+batch_size: 50
+epochs: 10
+start_epoch: 0
+learning_rate: 0.001
+learning_rate_patience: 8
+optimizer: "Adam"
+train_batch_size: 50
+num_workers: 4
+use_val: False
+val_batch_size: 50
+split_ratio: 0.9
+save_freq: 1
+is_load_pose: False
+use_aa: False
+
+
+########### Cross Datasets Extra Settings (only valid if data_type==cross) ###########
+xgaze_data_dir: ""
+
