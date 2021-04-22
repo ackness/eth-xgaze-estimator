@@ -133,3 +133,7 @@ dmypy.json
 .tar
 .gz
 .ckpt
+
+# logs or something
+wandb/
+

@@ -6,7 +6,9 @@ Some scripts for me to train and test easily on
 ## Train
 
 ```bash
-python main.py
+#python main.pys
+accelerate config  # This will create a config file on your server
+accelerate launch ./main.py --cfg=configs/resnet50-xgaze-within-yml
 ```
 
 ## Test
@@ -24,5 +26,6 @@ h5py
 opencv-python
 tqdm
 tensorboard
+accelerate
 ```
 

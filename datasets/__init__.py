@@ -3,7 +3,7 @@ __all__ = ['get_dataloader']
 
 def get_dataloader(config):
     if config.data_type in ['with-in', 'within_dataset', 'same']:
-        from xgaze import get_xgaze_train_loader, get_xgaze_test_loader, get_xgaze_train_val_loader
+        from .xgaze import get_xgaze_train_loader, get_xgaze_test_loader, get_xgaze_train_val_loader
         if config.mode == 'train':
             if config.use_val:
                 train_loader, val_loader = get_xgaze_train_val_loader(config)
