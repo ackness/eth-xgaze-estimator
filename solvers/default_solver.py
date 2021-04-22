@@ -10,7 +10,6 @@ from torch.optim.lr_scheduler import StepLR
 
 from datasets import get_dataloader
 from models import get_model
-from utils.losses import CosineLoss
 from utils.metrics import angular_error, AverageMeter
 
 accelerator = Accelerator()
@@ -43,8 +42,8 @@ class Solver:
             self.test_loader = get_dataloader(self.config)
             self.n_batch_test = len(self.test_loader)
 
-        # self.criterion = torch.nn.L1Loss()
-        self.criterion = CosineLoss()
+        self.criterion = torch.nn.L1Loss()
+        # self.criterion = CosineLoss()
         optimizer_cls = getattr(
             importlib.import_module('torch.optim'), self.config.optimizer
         )
