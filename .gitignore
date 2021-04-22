@@ -136,4 +136,4 @@ dmypy.json
 
 # logs or something
 wandb/
-
+configs/resnet50-xgaze-within-190.yml

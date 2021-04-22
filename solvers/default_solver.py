@@ -90,7 +90,7 @@ class Solver:
     def train_one_epoch(self, epoch):
         train_errors = AverageMeter()
         train_losses = AverageMeter()
-        train_iter = tqdm.tqdm(self.train_loader, desc='Train Epoch', ncols=20, total=self.n_batch_train, leave=False)
+        train_iter = tqdm.tqdm(self.train_loader, desc='Train Epoch', total=self.n_batch_train, leave=False)
         self.model.train()
         for i, batch in enumerate(train_iter):
             image = batch['image']
@@ -128,7 +128,7 @@ class Solver:
             self.model.eval()
             val_errors = AverageMeter()
             val_losses = AverageMeter()
-            val_iter = tqdm.tqdm(self.val_loader, desc='Val', ncols=20, total=self.n_batch_val, leave=False)
+            val_iter = tqdm.tqdm(self.val_loader, desc='Val', total=self.n_batch_val, leave=False)
             for i, batch in enumerate(val_iter):
                 image = batch['image']
                 gaze = batch['gaze']
